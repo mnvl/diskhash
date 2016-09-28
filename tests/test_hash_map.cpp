@@ -2,6 +2,8 @@
 #include <time.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <map>
 #include <iostream>
@@ -138,7 +140,7 @@ void test_hash_map_perf_inner(size_t records_count)
 		delta2 = double(c3.tv_sec - c2.tv_sec) + double(c3.tv_nsec - c2.tv_nsec + 1) / (1000 * 1000 * 1000);
 	#endif
 
-	printf("%.4f\t%.4f\t%.4f\t%u\t%u\t%u\t%.2f\n", delta1, delta2, delta1 / delta2,
+	printf("%.4f\t%.4f\t%.4f\t%lu\t%lu\t%lu\t%.2f\n", delta1, delta2, delta1 / delta2,
 		records_count, data_size, bytes_allocated, double(bytes_allocated) / data_size);
 }
 
