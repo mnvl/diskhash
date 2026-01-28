@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "hash_map.h"
+#include "fnv.h"
 
 namespace diskhash {
 
@@ -92,15 +93,6 @@ private:
 
     size_t shard_index(const std::string& key) const {
         return fnv1a(key) % num_shards_;
-    }
-
-    static uint32_t fnv1a(const std::string& key) {
-        uint32_t hash = 2166136261u;
-        for (char c : key) {
-            hash ^= static_cast<uint8_t>(c);
-            hash *= 16777619u;
-        }
-        return hash;
     }
 
     static hash_t hash_key(const std::string& key) {

@@ -7,20 +7,11 @@
 
 #include "settings.h"
 #include "hash_map.h"
+#include "fnv.h"
 
 namespace nb = nanobind;
 
 namespace {
-
-// FNV-1a 32-bit hash
-diskhash::hash_t fnv1a(std::string_view sv) {
-    diskhash::hash_t h = 2166136261u;
-    for (unsigned char c : sv) {
-        h ^= c;
-        h *= 16777619u;
-    }
-    return h;
-}
 
 class PyDiskHash {
 public:
@@ -33,7 +24,7 @@ public:
     nb::bytes get(nb::bytes key) {
         ensure_open();
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k);
+        diskhash::hash_t h = diskhash::fnv1a(k);
         auto r = map_->find(h, k);
         if (!r)
             throw nb::key_error(std::string(key.c_str(), key.size()).c_str());
@@ -43,7 +34,7 @@ public:
     nb::object get_default(nb::bytes key, nb::object default_val) {
         ensure_open();
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k);
+        diskhash::hash_t h = diskhash::fnv1a(k);
         auto r = map_->find(h, k);
         if (!r)
             return default_val;
@@ -55,7 +46,7 @@ public:
         if (read_only_)
             throw std::runtime_error("hash map is read-only");
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k);
+        diskhash::hash_t h = diskhash::fnv1a(k);
         auto r = map_->find(h, k);
         if (r)
             throw nb::key_error(std::string(key.c_str(), key.size()).c_str());
@@ -66,7 +57,7 @@ public:
     bool contains(nb::bytes key) {
         ensure_open();
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k);
+        diskhash::hash_t h = diskhash::fnv1a(k);
         return map_->find(h, k).has_value();
     }
 
@@ -75,7 +66,7 @@ public:
         if (read_only_)
             throw std::runtime_error("hash map is read-only");
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k);
+        diskhash::hash_t h = diskhash::fnv1a(k);
         if (!map_->remove(h, k))
             throw nb::key_error(std::string(key.c_str(), key.size()).c_str());
     }
