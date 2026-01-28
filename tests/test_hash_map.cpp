@@ -141,6 +141,62 @@ void test_hash_map_remove()
 	unlink("test_rmdat");
 }
 
+void test_hash_map_iterate()
+{
+	// test empty map iteration
+	{
+		wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
+		auto it = map1.begin();
+		auto end = map1.end();
+		assert(it == end);
+		map1.close();
+		unlink("test_itercat");
+		unlink("test_iterdat");
+	}
+
+	// test iteration with records
+	{
+		wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
+		std::map<std::string, unsigned> map2;
+
+		srand(42);
+
+		for(int i = 0; i < 0x1000; i++)
+		{
+			std::string k = random_key();
+			map1[k] = i;
+			map2[k] = i;
+		}
+
+		// iterate and collect all (key, value) pairs
+		std::map<std::string, unsigned> collected;
+		for(auto it = map1.begin(); it != map1.end(); ++it)
+		{
+			auto [key, value] = *it;
+			std::string k(key.data(), key.size());
+			unsigned v;
+			assert(value.size() == sizeof(unsigned));
+			std::copy(value.data(), value.data() + sizeof(unsigned),
+				reinterpret_cast<char *>(&v));
+			collected[k] = v;
+		}
+
+		assert(collected.size() == map2.size());
+		for(auto const &[k, v] : map2)
+		{
+			auto it = collected.find(k);
+			assert(it != collected.end());
+			assert(it->second == v);
+		}
+
+		std::cout << "iteration test: " << collected.size() << " records verified\n";
+
+		map1.close();
+		unlink("test_itercat");
+		unlink("test_iterdat");
+	}
+}
+
 void test_hash_map_perf_inner(size_t records_count)
 {
 	size_t data_size = 0;

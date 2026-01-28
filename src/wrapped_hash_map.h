@@ -82,6 +82,9 @@ public:
 		hash_map_.close();
 	}
 
+	typename hash_map<BucketSize>::const_iterator begin() const { return hash_map_.begin(); }
+	typename hash_map<BucketSize>::const_iterator end() const { return hash_map_.end(); }
+
 private:
 	hash_function_type hash_function_;
 	hash_map<BucketSize> hash_map_;

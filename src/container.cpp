@@ -346,4 +346,30 @@ size_t diskhash::container<BucketSize>::split(size_t bucket_id)
 	return result_bucket_id;
 }
 
+template<size_t BucketSize>
+bool diskhash::container<BucketSize>::read_record(size_t bucket_id, size_t &byte_offset, record_view &rv) const
+{
+	bucket_t *bucket_ptr = &layout_->buckets[bucket_id];
+
+	if(byte_offset >= bucket_ptr->bytes_used)
+		return false;
+
+	unsigned char *cursor = bucket_ptr->data + byte_offset;
+
+	hash_t record_hash;
+	size_t key_length, value_length;
+
+	std::copy(cursor, cursor + sizeof(hash_t), (unsigned char *) &record_hash);
+	cursor = vbe::read(cursor + sizeof(hash_t), key_length);
+	cursor = vbe::read(cursor, value_length);
+
+	rv.hash = record_hash;
+	rv.key = std::string_view(reinterpret_cast<const char *>(cursor), key_length);
+	rv.value = std::string_view(reinterpret_cast<const char *>(cursor + key_length), value_length);
+
+	byte_offset = (cursor + key_length + value_length) - bucket_ptr->data;
+
+	return true;
+}
+
 template class diskhash::container<>;

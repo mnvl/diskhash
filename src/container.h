@@ -37,6 +37,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace diskhash {
 
+struct record_view {
+	hash_t hash;
+	std::string_view key;
+	std::string_view value;
+};
+
 template<size_t BucketSize = DEFAULT_BUCKET_SIZE>
 class container {
 public:
@@ -58,6 +64,18 @@ public:
 	// find record (hash, key, *) in bucket bucket_id and return value as string_view,
 	// return nullopt if no such record found
 	std::optional<std::string_view> find_record(size_t bucket_id, const hash_t &hash, std::string_view key) const;
+
+	// parse record at byte_offset in bucket_id, fill rv, advance byte_offset.
+	// returns false if byte_offset >= bytes_used (no more records in this bucket).
+	bool read_record(size_t bucket_id, size_t &byte_offset, record_view &rv) const;
+
+	// return the next_bucket_id for the given bucket, or INVALID_BUCKET_ID if none
+	size_t next_bucket(size_t bucket_id) const
+	{
+		return layout_->buckets[bucket_id].next_bucket_id;
+	}
+
+	static size_t invalid_bucket_id() { return INVALID_BUCKET_ID; }
 
 	// remove record (hash, key) from bucket chain starting at bucket_id
 	// return true if found and removed, false if not found

@@ -100,6 +100,11 @@ public:
         do_close();
     }
 
+    diskhash::hash_map<> *map_ptr() {
+        ensure_open();
+        return map_;
+    }
+
 private:
     diskhash::hash_map<> *map_;
     std::string path_;
@@ -123,6 +128,25 @@ private:
     }
 };
 
+class PyDiskHashIterator {
+public:
+    PyDiskHashIterator(diskhash::hash_map<> *map):
+        it_(map->begin()), end_(map->end()) {}
+
+    nb::tuple next()
+    {
+        if(it_ == end_)
+            throw nb::stop_iteration();
+        auto [key, value] = *it_;
+        ++it_;
+        return nb::make_tuple(nb::bytes(key.data(), key.size()),
+                              nb::bytes(value.data(), value.size()));
+    }
+
+private:
+    diskhash::hash_map<>::const_iterator it_, end_;
+};
+
 } // anonymous namespace
 
 NB_MODULE(_diskhash, m) {
@@ -139,5 +163,12 @@ NB_MODULE(_diskhash, m) {
         .def("__enter__", &PyDiskHash::enter, nb::rv_policy::reference)
         .def("__exit__", [](PyDiskHash &self, nb::args) { self.exit(); })
         .def("close", &PyDiskHash::close)
-        .def("bytes_allocated", &PyDiskHash::bytes_allocated);
+        .def("bytes_allocated", &PyDiskHash::bytes_allocated)
+        .def("__iter__", [](PyDiskHash &self) {
+            return PyDiskHashIterator(self.map_ptr());
+        });
+
+    nb::class_<PyDiskHashIterator>(m, "DiskHashIterator")
+        .def("__iter__", [](PyDiskHashIterator &self) -> PyDiskHashIterator & { return self; })
+        .def("__next__", &PyDiskHashIterator::next);
 }

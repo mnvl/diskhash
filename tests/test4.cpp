@@ -8,6 +8,7 @@ extern void test_container();
 extern void test_container_remove();
 extern void test_hash_map();
 extern void test_hash_map_remove();
+extern void test_hash_map_iterate();
 extern void test_hash_map_perf();
 
 struct test_info {
@@ -23,6 +24,7 @@ test_info tests[] = {
 	{ "pcr", "container remove", test_container_remove, false },
 	{ "hv", "hash map validity", test_hash_map, false },
 	{ "hvr", "hash map remove", test_hash_map_remove, false },
+	{ "hvi", "hash map iteration", test_hash_map_iterate, false },
 	{ "hp", "hash map performance", test_hash_map_perf, true }
 };
 
