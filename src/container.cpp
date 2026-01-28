@@ -78,13 +78,13 @@ size_t diskhash::container<BucketSize>::create_bucket(size_t prefix_bits)
 }
 
 template<size_t BucketSize>
-void *diskhash::container<BucketSize>::create_record(size_t bucket_id, hash_t const &hash, const_record const &key,
-	const_record const &value)
+void *diskhash::container<BucketSize>::create_record(size_t bucket_id, hash_t const &hash, std::string_view key,
+	std::string_view value)
 {
 	bucket_t *bucket_ptr = &layout_->buckets[bucket_id];
 
-	size_t bytes_required = sizeof(hash_t) + vbe::length(key.length) + key.length
-		+ vbe::length(value.length) + value.length;
+	size_t bytes_required = sizeof(hash_t) + vbe::length(key.size()) + key.size()
+		+ vbe::length(value.size()) + value.size();
 
 	while(bucket_ptr->bytes_used + bytes_required > BUCKET_SIZE)
 	{
@@ -104,12 +104,15 @@ void *diskhash::container<BucketSize>::create_record(size_t bucket_id, hash_t co
 		}
 	}
 
+	const unsigned char *key_bytes = reinterpret_cast<const unsigned char *>(key.data());
+	const unsigned char *value_bytes = reinterpret_cast<const unsigned char *>(value.data());
+
 	unsigned char *cursor = bucket_ptr->data + bucket_ptr->bytes_used;
 	cursor = std::copy((unsigned char *) &hash, (unsigned char *) (&hash + 1), cursor);
-	cursor = vbe::write(cursor, key.length);
-	cursor = vbe::write(cursor, value.length);
-	cursor = std::copy(key.data, key.data + key.length, cursor);
-	std::copy(value.data, value.data + value.length, cursor);
+	cursor = vbe::write(cursor, key.size());
+	cursor = vbe::write(cursor, value.size());
+	cursor = std::copy(key_bytes, key_bytes + key.size(), cursor);
+	std::copy(value_bytes, value_bytes + value.size(), cursor);
 
 	bucket_ptr->bytes_used += bytes_required;
 
@@ -117,14 +120,10 @@ void *diskhash::container<BucketSize>::create_record(size_t bucket_id, hash_t co
 }
 
 template<size_t BucketSize>
-void *diskhash::container<BucketSize>::find(size_t bucket_id, const hash_t &hash, const_record const &key) const
+unsigned char *diskhash::container<BucketSize>::find_value_ptr(size_t bucket_id, const hash_t &hash, std::string_view key, size_t &value_length) const
 {
-	return find_record(bucket_id, hash, key).data;
-}
+	const unsigned char *key_bytes = reinterpret_cast<const unsigned char *>(key.data());
 
-template<size_t BucketSize>
-diskhash::record diskhash::container<BucketSize>::find_record(size_t bucket_id, const hash_t &hash, const_record const &key) const
-{
 	while(bucket_id != INVALID_BUCKET_ID)
 	{
 		bucket_t *bucket_ptr = &layout_->buckets[bucket_id];
@@ -134,15 +133,15 @@ diskhash::record diskhash::container<BucketSize>::find_record(size_t bucket_id, 
 		while(cursor != bucket_ptr->data + bucket_ptr->bytes_used)
 		{
 			hash_t record_hash;
-			size_t key_length, value_length;
+			size_t key_length;
 
 			std::copy(cursor, cursor + sizeof(hash_t), (unsigned char *) &record_hash);
 			cursor = vbe::read(cursor + sizeof(hash_t), key_length);
 			cursor = vbe::read(cursor, value_length);
 
-			if(record_hash == hash && key.length == key_length && std::equal(cursor, cursor + key_length, key.data))
+			if(record_hash == hash && key.size() == key_length && std::equal(cursor, cursor + key_length, key_bytes))
 			{
-				return record(cursor + key_length, value_length);
+				return cursor + key_length;
 			}
 
 			cursor += key_length;
@@ -154,12 +153,31 @@ diskhash::record diskhash::container<BucketSize>::find_record(size_t bucket_id, 
 		bucket_id = bucket_ptr->next_bucket_id;
 	}
 
-	return record(0, 0);
+	return nullptr;
 }
 
 template<size_t BucketSize>
-bool diskhash::container<BucketSize>::remove_record(size_t bucket_id, const hash_t &hash, const_record const &key)
+void *diskhash::container<BucketSize>::find(size_t bucket_id, const hash_t &hash, std::string_view key) const
 {
+	size_t value_length;
+	return find_value_ptr(bucket_id, hash, key, value_length);
+}
+
+template<size_t BucketSize>
+std::optional<std::string_view> diskhash::container<BucketSize>::find_record(size_t bucket_id, const hash_t &hash, std::string_view key) const
+{
+	size_t value_length;
+	unsigned char *ptr = find_value_ptr(bucket_id, hash, key, value_length);
+	if(!ptr)
+		return std::nullopt;
+	return std::string_view(reinterpret_cast<const char *>(ptr), value_length);
+}
+
+template<size_t BucketSize>
+bool diskhash::container<BucketSize>::remove_record(size_t bucket_id, const hash_t &hash, std::string_view key)
+{
+	const unsigned char *key_bytes = reinterpret_cast<const unsigned char *>(key.data());
+
 	while(bucket_id != INVALID_BUCKET_ID)
 	{
 		bucket_t *bucket_ptr = &layout_->buckets[bucket_id];
@@ -179,7 +197,7 @@ bool diskhash::container<BucketSize>::remove_record(size_t bucket_id, const hash
 
 			size_t record_length = (cursor - record_start) + key_length + value_length;
 
-			if(record_hash == hash && key.length == key_length && std::equal(cursor, cursor + key_length, key.data))
+			if(record_hash == hash && key.size() == key_length && std::equal(cursor, cursor + key_length, key_bytes))
 			{
 				unsigned char *record_end = record_start + record_length;
 				unsigned char *bucket_end = bucket_ptr->data + bucket_ptr->bytes_used;

@@ -31,48 +31,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if !defined(__DISKHASH__RECORD_H__)
 #define __DISKHASH__RECORD_H__
 
+#include <string>
+#include <string_view>
+
 namespace diskhash {
 
-template<class T>
-struct basic_record {
-	T *data;
-	size_t length;
-
-	basic_record(T *d, size_t l):
-		data(d),
-		length(l)
-	{
-	}
-
-	operator basic_record<T const>()
-	{
-		return basic_record<T const>(data, length);
-	}
-};
-
-typedef basic_record<unsigned char> record;
-typedef basic_record<unsigned char const> const_record;
-
-inline record wrap(std::string &str)
+inline std::string_view wrap(std::string const &str)
 {
-	return record((unsigned char *) str.c_str(), str.size());
-}
-
-inline const_record wrap(std::string const &str)
-{
-	return const_record((unsigned char const *) str.c_str(), str.size());
+	return std::string_view(str.data(), str.size());
 }
 
 template<class T>
-inline record wrap(T &t)
+inline std::string_view wrap(T const &t)
 {
-	return record((unsigned char *) &t, sizeof(T));
-}
-
-template<class T>
-inline const_record wrap(T const &t)
-{
-	return const_record((unsigned char const *) &t, sizeof(T));
+	return std::string_view(reinterpret_cast<const char *>(&t), sizeof(T));
 }
 
 // namespace diskhash

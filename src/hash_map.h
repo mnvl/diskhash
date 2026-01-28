@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if !defined(__DISKHASH__HASH_MAP_H__)
 #define __DISKHASH__HASH_MAP_H__
 
+#include <optional>
+#include <string_view>
 #include "record.h"
 #include "container.h"
 #include "catalogue.h"
@@ -48,7 +50,7 @@ public:
 		}
 	}
 
-	void *get(hash_t hash, const_record const &key, const_record const &default_value)
+	void *get(hash_t hash, std::string_view key, std::string_view default_value)
 	{
 		size_t bucket_id = catalogue_.find(hash);
 
@@ -88,12 +90,12 @@ public:
 		return container_.create_record(bucket_id, hash, key, default_value);
 	}
 
-	record find(hash_t hash, const_record const &key) const {
+	std::optional<std::string_view> find(hash_t hash, std::string_view key) const {
 		size_t bucket_id = catalogue_.find(hash);
 		return container_.find_record(bucket_id, hash, key);
 	}
 
-	bool remove(hash_t hash, const_record const &key) {
+	bool remove(hash_t hash, std::string_view key) {
 		size_t bucket_id = catalogue_.find(hash);
 		return container_.remove_record(bucket_id, hash, key);
 	}

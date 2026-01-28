@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "settings.h"
 #include <string>
+#include <string_view>
+#include <optional>
 #include <stdexcept>
 #include "file_map.h"
 #include "record.h"
@@ -47,25 +49,25 @@ public:
 	size_t create_bucket(size_t prefix_bits);
 
 	// write record (hash, key, *) into bucket bucket_id, return value is pointer to value field
-	void *create_record(size_t bucket_id, hash_t const &hash, const_record const &key,
-		const_record const &value);
+	void *create_record(size_t bucket_id, hash_t const &hash, std::string_view key,
+		std::string_view value);
 
 	// find record (hash, key, *) in bucket bucket_id and return pointer to value,
 	// return 0 if no such record found
-	void *find(size_t bucket_id, const hash_t &hash, const_record const &key) const;
+	void *find(size_t bucket_id, const hash_t &hash, std::string_view key) const;
 
-	// find record (hash, key, *) in bucket bucket_id and return value as record (data + length),
-	// return record(0, 0) if no such record found
-	record find_record(size_t bucket_id, const hash_t &hash, const_record const &key) const;
+	// find record (hash, key, *) in bucket bucket_id and return value as string_view,
+	// return nullopt if no such record found
+	std::optional<std::string_view> find_record(size_t bucket_id, const hash_t &hash, std::string_view key) const;
 
 	// remove record (hash, key) from bucket chain starting at bucket_id
 	// return true if found and removed, false if not found
-	bool remove_record(size_t bucket_id, const hash_t &hash, const_record const &key);
+	bool remove_record(size_t bucket_id, const hash_t &hash, std::string_view key);
 
 	// find record (hash, key, *) in bucket bucket_id and return pointer to value,
 	// if no such record found -- create new one record (key, 0) in bucket bucket_id
 	// and return pointer to value field, if no space left in bucket -- return 0
-	void *get(size_t bucket_id, const hash_t &hash, const_record const &key, const_record const &value)
+	void *get(size_t bucket_id, const hash_t &hash, std::string_view key, std::string_view value)
 	{
 		if(void *value = find(bucket_id, hash, key))
 		{
@@ -113,6 +115,9 @@ public:
 	}
 
 private:
+	// shared helper returning pointer to value data in mmap memory, or nullptr if not found
+	unsigned char *find_value_ptr(size_t bucket_id, const hash_t &hash, std::string_view key, size_t &value_length) const;
+
 	static const size_t INVALID_BUCKET_ID = size_t(-1);
 	static const unsigned SIGNATURE = 0x69d3db7a;
 

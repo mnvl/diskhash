@@ -13,6 +13,8 @@ add_library(diskhash
 )
 target_include_directories(diskhash PUBLIC src)
 set_target_properties(diskhash PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Link -lrt on Linux (used by tests for clock_gettime)
 if(UNIX AND NOT APPLE)

@@ -1,10 +1,10 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <string>
+#include <string_view>
 #include <stdexcept>
 
 #include "settings.h"
-#include "record.h"
 #include "hash_map.h"
 
 namespace nb = nanobind;
@@ -12,10 +12,10 @@ namespace nb = nanobind;
 namespace {
 
 // FNV-1a 32-bit hash
-diskhash::hash_t fnv1a(const unsigned char *data, size_t len) {
+diskhash::hash_t fnv1a(std::string_view sv) {
     diskhash::hash_t h = 2166136261u;
-    for (size_t i = 0; i < len; ++i) {
-        h ^= data[i];
+    for (unsigned char c : sv) {
+        h ^= c;
         h *= 16777619u;
     }
     return h;
@@ -36,21 +36,21 @@ public:
     nb::bytes get(nb::bytes key) {
         ensure_open();
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k.data, k.length);
-        diskhash::record r = map_->find(h, k);
-        if (!r.data)
+        diskhash::hash_t h = fnv1a(k);
+        auto r = map_->find(h, k);
+        if (!r)
             throw nb::key_error(std::string(key.c_str(), key.size()).c_str());
-        return nb::bytes(reinterpret_cast<const char *>(r.data), r.length);
+        return nb::bytes(r->data(), r->size());
     }
 
     nb::object get_default(nb::bytes key, nb::object default_val) {
         ensure_open();
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k.data, k.length);
-        diskhash::record r = map_->find(h, k);
-        if (!r.data)
+        diskhash::hash_t h = fnv1a(k);
+        auto r = map_->find(h, k);
+        if (!r)
             return default_val;
-        return nb::cast(nb::bytes(reinterpret_cast<const char *>(r.data), r.length));
+        return nb::cast(nb::bytes(r->data(), r->size()));
     }
 
     void put(nb::bytes key, nb::bytes value) {
@@ -58,21 +58,19 @@ public:
         if (read_only_)
             throw std::runtime_error("hash map is read-only");
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k.data, k.length);
-        diskhash::record r = map_->find(h, k);
-        if (r.data)
+        diskhash::hash_t h = fnv1a(k);
+        auto r = map_->find(h, k);
+        if (r)
             throw nb::key_error(std::string(key.c_str(), key.size()).c_str());
-        diskhash::const_record v(
-            reinterpret_cast<const unsigned char *>(value.c_str()), value.size());
+        std::string_view v(value.c_str(), value.size());
         map_->get(h, k, v);
     }
 
     bool contains(nb::bytes key) {
         ensure_open();
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k.data, k.length);
-        diskhash::record r = map_->find(h, k);
-        return r.data != nullptr;
+        diskhash::hash_t h = fnv1a(k);
+        return map_->find(h, k).has_value();
     }
 
     void remove(nb::bytes key) {
@@ -80,7 +78,7 @@ public:
         if (read_only_)
             throw std::runtime_error("hash map is read-only");
         auto k = make_key(key);
-        diskhash::hash_t h = fnv1a(k.data, k.length);
+        diskhash::hash_t h = fnv1a(k);
         if (!map_->remove(h, k))
             throw nb::key_error(std::string(key.c_str(), key.size()).c_str());
     }
@@ -120,9 +118,8 @@ private:
         }
     }
 
-    static diskhash::const_record make_key(nb::bytes &b) {
-        return diskhash::const_record(
-            reinterpret_cast<const unsigned char *>(b.c_str()), b.size());
+    static std::string_view make_key(nb::bytes &b) {
+        return std::string_view(b.c_str(), b.size());
     }
 };
 
