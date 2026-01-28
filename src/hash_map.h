@@ -41,8 +41,11 @@ public:
 		catalogue_((std::string(filename) + "cat").c_str(), 1, read_only),
 		container_((std::string(filename) + "dat").c_str(), read_only)
 	{
-		catalogue_.find(hash_t(0)) = container_.create_bucket(1);
-		catalogue_.find(~hash_t(0)) = container_.create_bucket(1);
+		if(container_.buckets_count() == 0)
+		{
+			catalogue_.find(hash_t(0)) = container_.create_bucket(1);
+			catalogue_.find(~hash_t(0)) = container_.create_bucket(1);
+		}
 	}
 
 	void *get(hash_t hash, const_record const &key, const_record const &default_value)
@@ -83,6 +86,11 @@ public:
 		}
 
 		return container_.create_record(bucket_id, hash, key, default_value);
+	}
+
+	record find(hash_t hash, const_record const &key) const {
+		size_t bucket_id = catalogue_.find(hash);
+		return container_.find_record(bucket_id, hash, key);
 	}
 
 	size_t bytes_allocated() const {

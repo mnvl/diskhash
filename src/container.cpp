@@ -119,6 +119,12 @@ void *diskhash::container<BucketSize>::create_record(size_t bucket_id, hash_t co
 template<size_t BucketSize>
 void *diskhash::container<BucketSize>::find(size_t bucket_id, const hash_t &hash, const_record const &key) const
 {
+	return find_record(bucket_id, hash, key).data;
+}
+
+template<size_t BucketSize>
+diskhash::record diskhash::container<BucketSize>::find_record(size_t bucket_id, const hash_t &hash, const_record const &key) const
+{
 	while(bucket_id != INVALID_BUCKET_ID)
 	{
 		bucket_t *bucket_ptr = &layout_->buckets[bucket_id];
@@ -136,7 +142,7 @@ void *diskhash::container<BucketSize>::find(size_t bucket_id, const hash_t &hash
 
 			if(record_hash == hash && key.length == key_length && std::equal(cursor, cursor + key_length, key.data))
 			{
-				return cursor + key_length;
+				return record(cursor + key_length, value_length);
 			}
 
 			cursor += key_length;
@@ -148,7 +154,7 @@ void *diskhash::container<BucketSize>::find(size_t bucket_id, const hash_t &hash
 		bucket_id = bucket_ptr->next_bucket_id;
 	}
 
-	return 0;
+	return record(0, 0);
 }
 
 template<size_t BucketSize>

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 project(diskhash VERSION 1.0 LANGUAGES CXX)
 
 # Library target: libdiskhash
@@ -12,6 +12,7 @@ add_library(diskhash
     $<$<PLATFORM_ID:Windows>:src/windows/file_map.cpp>
 )
 target_include_directories(diskhash PUBLIC src)
+set_target_properties(diskhash PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Link -lrt on Linux (used by tests for clock_gettime)
 if(UNIX AND NOT APPLE)
@@ -30,3 +31,12 @@ add_executable(test4
 )
 target_link_libraries(test4 PRIVATE diskhash)
 add_test(NAME test4 COMMAND test4)
+
+# Python bindings (built via scikit-build-core: pip install .)
+if(SKBUILD)
+    find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+    find_package(nanobind CONFIG REQUIRED)
+    nanobind_add_module(_diskhash src/bindings.cpp)
+    target_link_libraries(_diskhash PRIVATE diskhash)
+    install(TARGETS _diskhash LIBRARY DESTINATION diskhash)
+endif()

@@ -1,0 +1,12 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "nanobind>=2.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "diskhash"
+version = "1.0.0"
+description = "Python bindings for libdiskhash disk-based hash table"
+requires-python = ">=3.8"
+
+[tool.scikit-build]
+wheel.packages = ["python/diskhash"]
