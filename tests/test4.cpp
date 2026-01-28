@@ -14,15 +14,16 @@ struct test_info {
 	const char *tag;
 	const char *name;
 	void (*fp)();
+	bool skip_by_default;
 };
 
 test_info tests[] = {
-	{ "vbe", "variable byte encoding", test_vbe },
-	{ "pc", "container", test_container },
-	{ "pcr", "container remove", test_container_remove },
-	{ "hv", "hash map validity", test_hash_map },
-	{ "hvr", "hash map remove", test_hash_map_remove },
-	{ "hp", "hash map performance", test_hash_map_perf }
+	{ "vbe", "variable byte encoding", test_vbe, false },
+	{ "pc", "container", test_container, false },
+	{ "pcr", "container remove", test_container_remove, false },
+	{ "hv", "hash map validity", test_hash_map, false },
+	{ "hvr", "hash map remove", test_hash_map_remove, false },
+	{ "hp", "hash map performance", test_hash_map_perf, true }
 };
 
 void run_tests(const char *prefix)
@@ -36,7 +37,7 @@ void run_tests(const char *prefix)
 
 	for(size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
 	{
-		if(prefix_len == 0 || strncmp(prefix, tests[i].tag, prefix_len) == 0)
+		if(prefix_len == 0 ? !tests[i].skip_by_default : strncmp(prefix, tests[i].tag, prefix_len) == 0)
 		{
 			std::cout << "*** running " << tests[i].name << " test\n";
 			(*tests[i].fp)();
