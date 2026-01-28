@@ -35,6 +35,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace diskhash {
 
+
+static std::string_view wrap(std::string const &str)
+{
+	return std::string_view(str.data(), str.size());
+}
+
+template<class T>
+static std::string_view wrap(T const &t)
+{
+	return std::string_view(reinterpret_cast<const char *>(&t), sizeof(T));
+}
+
+
 template<class Key, class Value, class HashFunc, size_t BucketSize = DEFAULT_BUCKET_SIZE>
 class wrapped_hash_map {
 public:
@@ -58,17 +71,6 @@ public:
 	{
 		hash_t hash = hash_function_(key);
 		return hash_map_.remove(hash, wrap(key));
-	}
-
-	static std::string_view wrap(std::string const &str)
-	{
-		return std::string_view(str.data(), str.size());
-	}
-
-	template<class T>
-	static std::string_view wrap(T const &t)
-	{
-		return std::string_view(reinterpret_cast<const char *>(&t), sizeof(T));
 	}
 
 	size_t bytes_allocated() const
