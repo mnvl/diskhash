@@ -1,5 +1,4 @@
-#if !defined(__DISKHASH__SETTINGS_H__)
-#define __DISKHASH__SETTINGS_H__
+#pragma once
 
 #include <limits.h>
 #include <stddef.h>
@@ -18,5 +17,3 @@ size_t const DEFAULT_BUCKET_SIZE = 4096;
 
 // namespace diskhash
 }
-
-#endif //!defined(__DISKHASH__SETTINGS_H__)

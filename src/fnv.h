@@ -1,5 +1,4 @@
-#ifndef DISKHASH_FNV_H
-#define DISKHASH_FNV_H
+#pragma once
 
 #include <string_view>
 #include "settings.h"
@@ -16,5 +15,3 @@ inline hash_t fnv1a(std::string_view sv) {
 }
 
 }  // namespace diskhash
-
-#endif  // DISKHASH_FNV_H

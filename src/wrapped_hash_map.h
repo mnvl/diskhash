@@ -1,5 +1,4 @@
-#if !defined(__DISKHASH__WRAPPED_HASH_MAP_H__)
-#define __DISKHASH__WRAPPED_HASH_MAP_H__
+#pragma once
 
 #include "hash_map.h"
 
@@ -62,5 +61,3 @@ private:
 
 // namespace diskhash
 }
-
-#endif //!defined(__DISKHASH__WRAPPED_HASH_MAP_H__)

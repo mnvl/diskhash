@@ -1,5 +1,4 @@
-#if !defined(system_error_h)
-#define system_error_h
+#pragma once
 
 #include <errno.h>
 #include <string.h>
@@ -25,5 +24,3 @@ private:
 
 // namespace diskhash
 }
-
-#endif //!defined(system_error_h)

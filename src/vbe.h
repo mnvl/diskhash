@@ -1,5 +1,4 @@
-#if !defined(__DISKHASH__VBE_H__)
-#define __DISKHASH__VBE_H__
+#pragma once
 
 #include <limits.h>
 
@@ -64,5 +63,3 @@ size_t length(T const &val)
 
 // namespace diskhash
 }
-
-#endif //!defined(__DISKHASH__VBE_H__)

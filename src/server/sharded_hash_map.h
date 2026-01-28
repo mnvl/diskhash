@@ -1,5 +1,4 @@
-#ifndef DISKHASH_SERVER_SHARDED_HASH_MAP_H
-#define DISKHASH_SERVER_SHARDED_HASH_MAP_H
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -101,5 +100,3 @@ private:
 };
 
 }  // namespace diskhash
-
-#endif  // DISKHASH_SERVER_SHARDED_HASH_MAP_H

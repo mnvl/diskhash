@@ -1,5 +1,4 @@
-#if !defined(__DISKHASH__FILE_MAP_H__)
-#define __DISKHASH__FILE_MAP_H__
+#pragma once
 
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -40,5 +39,3 @@ private:
 
 // namespace diskhash
 }
-
-#endif //!defined(__DISKHASH__FILE_MAP_H__)

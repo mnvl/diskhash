@@ -1,5 +1,4 @@
-#ifndef DISKHASH_SERVER_HTTP_SERVER_H
-#define DISKHASH_SERVER_HTTP_SERVER_H
+#pragma once
 
 #include <atomic>
 #include <cstdint>
@@ -62,5 +61,3 @@ private:
 };
 
 }  // namespace diskhash
-
-#endif  // DISKHASH_SERVER_HTTP_SERVER_H

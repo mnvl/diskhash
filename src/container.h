@@ -1,5 +1,4 @@
-#if !defined(container_h)
-#define container_h
+#pragma once
 
 #include "settings.h"
 #include <string>
@@ -131,5 +130,3 @@ private:
 
 // namespace diskhash
 }
-
-#endif //!defined(container_h)

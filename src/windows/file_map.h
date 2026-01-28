@@ -1,5 +1,4 @@
-#if !defined(__DISKHASH__FILE_MAP_H__)
-#define __DISKHASH__FILE_MAP_H__
+#pragma once
 
 #include <windows.h>
 #include "system_error.h"
@@ -36,5 +35,3 @@ private:
 
 // namespace diskhash
 }
-
-#endif //!defined(__DISKHASH__FILE_MAP_H__)

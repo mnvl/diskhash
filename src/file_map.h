@@ -1,3 +1,5 @@
+#pragma once
+
 #if defined(__linux__)
 	#include "linux/file_map.h"
 #elif defined(__APPLE__)

@@ -1,5 +1,4 @@
-#if !defined(__DISKHASH__CATALOGUE_H__)
-#define __DISKHASH__CATALOGUE_H__
+#pragma once
 
 #include <limits.h>
 #include <string>
@@ -86,5 +85,3 @@ private:
 
 // namespace diskhash
 }
-
-#endif //!defined(__DISKHASH__CATALOGUE_H__)

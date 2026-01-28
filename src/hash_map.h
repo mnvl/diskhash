@@ -1,5 +1,4 @@
-#if !defined(__DISKHASH__HASH_MAP_H__)
-#define __DISKHASH__HASH_MAP_H__
+#pragma once
 
 #include <optional>
 #include <string_view>
@@ -201,5 +200,3 @@ private:
 
 // namespace diskhash
 }
-
-#endif //!defined(__DISKHASH__HASH_MAP_H__)

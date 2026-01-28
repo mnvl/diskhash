@@ -1,5 +1,4 @@
-#if !defined(__DISKHASH__SYSTEM_ERROR_H__)
-#define __DISKHASH__SYSTEM_ERROR_H__
+#pragma once
 
 #include <windows.h>
 #include <stdexcept>
@@ -40,5 +39,3 @@ public:
 
 // namespace diskhash
 }
-
-#endif
