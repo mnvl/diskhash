@@ -1,4 +1,5 @@
 /*
+
 Copyright (c) 2007 Manvel Avetisian. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -23,14 +24,36 @@ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 */
 
-#if defined(__linux__)
-	#include "linux/file_map.h"
-#elif defined(__APPLE__)
-	#include "macos/file_map.h"
-#elif defined(_WIN32)
-	#include "windows/file_map.h"
-#else
-	#error Your operating system is not supported, consider README for details
-#endif
+
+#if !defined(system_error_h)
+#define system_error_h
+
+#include <errno.h>
+#include <string.h>
+
+#include <exception>
+
+namespace diskhash {
+
+class system_error: public std::exception {
+public:
+	system_error():
+		error_number_(errno)
+	{
+	}
+
+	char const *what() const throw() {
+		return strerror(error_number_);
+	}
+
+private:
+	int error_number_;
+};
+
+// namespace diskhash
+}
+
+#endif //!defined(system_error_h)

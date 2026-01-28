@@ -9,17 +9,18 @@ endif()
 # Library target: libdiskhash
 # Platform-specific source selection:
 #   Linux:   src/linux/file_map.cpp
+#   macOS:   src/macos/file_map.cpp
 #   Windows: src/windows/file_map.cpp
 add_library(diskhash
     src/catalogue.cpp
     src/container.cpp
     $<$<PLATFORM_ID:Linux>:src/linux/file_map.cpp>
+    $<$<PLATFORM_ID:Darwin>:src/macos/file_map.cpp>
     $<$<PLATFORM_ID:Windows>:src/windows/file_map.cpp>
 )
 target_include_directories(diskhash PUBLIC src)
 set_target_properties(diskhash PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+target_compile_features(diskhash PUBLIC cxx_std_17)
 
 # Link -lrt on Linux (used by tests for clock_gettime)
 if(UNIX AND NOT APPLE)
@@ -45,7 +46,7 @@ if(NOT SKBUILD)
 endif()
 
 # HTTP Server executable
-find_package(Boost REQUIRED COMPONENTS system program_options)
+find_package(Boost REQUIRED COMPONENTS program_options)
 
 add_executable(diskhash_server
     src/server/main.cpp
@@ -53,10 +54,14 @@ add_executable(diskhash_server
 )
 target_link_libraries(diskhash_server PRIVATE
     diskhash
-    Boost::system
     Boost::program_options
-    pthread
 )
+if(APPLE)
+    find_package(Threads REQUIRED)
+    target_link_libraries(diskhash_server PRIVATE Threads::Threads)
+else()
+    target_link_libraries(diskhash_server PRIVATE pthread)
+endif()
 target_include_directories(diskhash_server PRIVATE src)
 target_compile_features(diskhash_server PRIVATE cxx_std_17)
 
