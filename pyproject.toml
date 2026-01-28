@@ -7,9 +7,10 @@ name = "diskhash"
 version = "1.0.0"
 description = "Python bindings for libdiskhash disk-based hash table"
 requires-python = ">=3.8"
+dependencies = ["requests>=2.28"]
 
 [project.optional-dependencies]
-test = ["pytest>=7.0", "requests>=2.28"]
+test = ["pytest>=7.0"]
 
 [tool.scikit-build]
 wheel.packages = ["python/diskhash"]
