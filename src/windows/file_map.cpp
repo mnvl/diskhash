@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "file_map.h"
+#include <iostream>
 
 diskhash::file_map::file_map(char const *file_name, bool read_only, size_t length):
 	read_only_(read_only),
@@ -63,7 +64,22 @@ diskhash::file_map::file_map(char const *file_name, bool read_only, size_t lengt
 
 diskhash::file_map::~file_map()
 {
-	close();
+	if(start_ || file_handle_ != INVALID_HANDLE_VALUE)
+	{
+		std::cerr << "diskhash: file_map destroyed without explicit close()\n";
+		try
+		{
+			close();
+		}
+		catch(std::exception const &e)
+		{
+			std::cerr << "diskhash: error closing file_map in destructor: " << e.what() << "\n";
+		}
+		catch(...)
+		{
+			std::cerr << "diskhash: unknown error closing file_map in destructor\n";
+		}
+	}
 }
 
 void diskhash::file_map::resize(size_t new_length)
