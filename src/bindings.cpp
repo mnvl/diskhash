@@ -1,5 +1,6 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <stdexcept>
@@ -24,13 +25,9 @@ diskhash::hash_t fnv1a(std::string_view sv) {
 class PyDiskHash {
 public:
     PyDiskHash(const std::string &path, bool read_only)
-        : map_(nullptr), path_(path), read_only_(read_only)
+        : map_(std::make_unique<diskhash::hash_map<>>(path.c_str(), read_only)),
+          path_(path), read_only_(read_only)
     {
-        map_ = new diskhash::hash_map<>(path.c_str(), read_only);
-    }
-
-    ~PyDiskHash() {
-        do_close();
     }
 
     nb::bytes get(nb::bytes key) {
@@ -89,7 +86,10 @@ public:
     }
 
     void close() {
-        do_close();
+        if (map_) {
+            map_->close();
+            map_.reset();
+        }
     }
 
     PyDiskHash *enter() {
@@ -97,30 +97,22 @@ public:
     }
 
     void exit() {
-        do_close();
+        close();
     }
 
     diskhash::hash_map<> *map_ptr() {
         ensure_open();
-        return map_;
+        return map_.get();
     }
 
 private:
-    diskhash::hash_map<> *map_;
+    std::unique_ptr<diskhash::hash_map<>> map_;
     std::string path_;
     bool read_only_;
 
     void ensure_open() {
         if (!map_)
             throw std::runtime_error("hash map is closed");
-    }
-
-    void do_close() {
-        if (map_) {
-            map_->close();
-            delete map_;
-            map_ = nullptr;
-        }
     }
 
     static std::string_view make_key(nb::bytes &b) {
