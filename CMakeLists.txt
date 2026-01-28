@@ -37,6 +37,22 @@ target_link_libraries(test4 PRIVATE diskhash Boost::unit_test_framework)
 target_compile_definitions(test4 PRIVATE BOOST_TEST_DYN_LINK)
 add_test(NAME test4 COMMAND test4)
 
+# HTTP Server executable
+find_package(Boost REQUIRED COMPONENTS system program_options)
+
+add_executable(diskhash_server
+    src/server/main.cpp
+    src/server/http_server.cpp
+)
+target_link_libraries(diskhash_server PRIVATE
+    diskhash
+    Boost::system
+    Boost::program_options
+    pthread
+)
+target_include_directories(diskhash_server PRIVATE src)
+target_compile_features(diskhash_server PRIVATE cxx_std_17)
+
 # Python bindings (built via scikit-build-core: pip install .)
 if(SKBUILD)
     find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
