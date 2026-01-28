@@ -42,7 +42,7 @@ namespace diskhash {
 typedef unsigned hash_t;
 size_t const HASH_BITS = sizeof(hash_t) * CHAR_BIT;
 
-size_t const DEFAULT_BUCKET_SIZE = 256;
+size_t const DEFAULT_BUCKET_SIZE = 4096;
 
 // namespace diskhash
 }

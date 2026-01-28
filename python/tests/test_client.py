@@ -1,6 +1,7 @@
 """Tests for DiskHashClient HTTP client."""
 
 import os
+import shutil
 import signal
 import socket
 import subprocess
@@ -22,6 +23,11 @@ def find_free_port():
 
 def get_server_path():
     """Get path to the diskhash_server binary."""
+    # Check PATH first (covers pip-installed binary)
+    on_path = shutil.which("diskhash_server")
+    if on_path:
+        return on_path
+    # Fall back to common build directories
     candidates = [
         os.path.join(os.path.dirname(__file__), "../../build/diskhash_server"),
         os.path.join(os.path.dirname(__file__), "../../../build/diskhash_server"),
@@ -32,7 +38,7 @@ def get_server_path():
         abs_path = os.path.abspath(path)
         if os.path.isfile(abs_path) and os.access(abs_path, os.X_OK):
             return abs_path
-    pytest.skip("diskhash_server binary not found. Build with: make diskhash_server")
+    pytest.skip("diskhash_server binary not found. Install with: pip install .")
 
 
 # Module-scoped: one server for all tests in this file

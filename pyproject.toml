@@ -13,6 +13,7 @@ test = ["pytest>=7.0", "requests>=2.28"]
 
 [tool.scikit-build]
 wheel.packages = ["python/diskhash"]
+cmake.build-type = "Release"
 
 [tool.pytest.ini_options]
 testpaths = ["python/tests"]

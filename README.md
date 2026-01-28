@@ -58,20 +58,12 @@ Note: inserting a duplicate key raises `KeyError`. Records are packed inline wit
 
 ## HTTP Server
 
-An HTTP server provides network access to the hash map with sharding for concurrency.
-
-### Building
-
-```bash
-cd build
-cmake ..
-make diskhash_server
-```
+An HTTP server provides network access to the hash map with sharding for concurrency. The server is included in the pip package.
 
 ### Running
 
 ```bash
-./diskhash_server --port 8080 --db /path/to/db --shards 4 --threads 4
+diskhash_server --port 8080 --db /path/to/db --shards 4 --threads 4
 ```
 
 Options:
