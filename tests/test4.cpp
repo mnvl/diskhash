@@ -5,7 +5,9 @@
 
 extern void test_vbe();
 extern void test_container();
+extern void test_container_remove();
 extern void test_hash_map();
+extern void test_hash_map_remove();
 extern void test_hash_map_perf();
 
 struct test_info {
@@ -17,7 +19,9 @@ struct test_info {
 test_info tests[] = {
 	{ "vbe", "variable byte encoding", test_vbe },
 	{ "pc", "container", test_container },
+	{ "pcr", "container remove", test_container_remove },
 	{ "hv", "hash map validity", test_hash_map },
+	{ "hvr", "hash map remove", test_hash_map_remove },
 	{ "hp", "hash map performance", test_hash_map_perf }
 };
 

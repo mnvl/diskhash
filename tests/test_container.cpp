@@ -66,3 +66,66 @@ void test_container()
 	container.close();
 	unlink("test_map");
 }
+
+void test_container_remove()
+{
+	typedef container<> container_type;
+	typedef std::map<unsigned, unsigned> map_type;
+
+	std::cout << "creating container for remove test...\n";
+
+	container_type container("test_map_rm");
+
+	map_type map;
+
+	size_t bucket_id = container.create_bucket(0);
+
+	std::cout << "filling bucket...\n";
+	for(size_t i = 0; i < 100; i++)
+	{
+		unsigned key = unsigned(rand()) * unsigned(rand());
+		unsigned value = unsigned(rand()) * unsigned(rand());
+
+		if(map.find(key) != map.end())
+		{
+			continue;
+		}
+
+		container.get(bucket_id, ~key, diskhash::wrap(key), diskhash::wrap(value));
+		map.insert(std::make_pair(key, value));
+	}
+
+	std::cout << "checking remove_record returns false for non-existent key...\n";
+	{
+		unsigned missing_key = 0xdeadbeef;
+		assert(!container.remove_record(bucket_id, ~missing_key, diskhash::wrap(missing_key)));
+	}
+
+	std::cout << "removing records one by one and verifying...\n";
+	size_t removed = 0;
+	for(map_type::iterator it = map.begin(); it != map.end(); )
+	{
+		unsigned key = it->first;
+		unsigned hash = ~key;
+
+		// remove from container
+		assert(container.remove_record(bucket_id, hash, diskhash::wrap(key)));
+		removed++;
+
+		// removing again should return false
+		assert(!container.remove_record(bucket_id, hash, diskhash::wrap(key)));
+
+		it = map.erase(it);
+
+		// remaining records should still be findable
+		for(map_type::const_iterator it2 = map.begin(); it2 != map.end(); it2++)
+		{
+			assert(*(unsigned *) container.find(bucket_id, ~it2->first, diskhash::wrap(it2->first)) == it2->second);
+		}
+	}
+
+	std::cout << "removed " << removed << " records successfully\n";
+
+	container.close();
+	unlink("test_map_rm");
+}

@@ -75,6 +75,16 @@ public:
         return r.data != nullptr;
     }
 
+    void remove(nb::bytes key) {
+        ensure_open();
+        if (read_only_)
+            throw std::runtime_error("hash map is read-only");
+        auto k = make_key(key);
+        diskhash::hash_t h = fnv1a(k.data, k.length);
+        if (!map_->remove(h, k))
+            throw nb::key_error(std::string(key.c_str(), key.size()).c_str());
+    }
+
     size_t bytes_allocated() {
         ensure_open();
         return map_->bytes_allocated();
@@ -127,6 +137,8 @@ NB_MODULE(_diskhash, m) {
         .def("__getitem__", &PyDiskHash::get)
         .def("__setitem__", &PyDiskHash::put)
         .def("__contains__", &PyDiskHash::contains)
+        .def("__delitem__", &PyDiskHash::remove)
+        .def("remove", &PyDiskHash::remove)
         .def("__enter__", &PyDiskHash::enter, nb::rv_policy::reference)
         .def("__exit__", [](PyDiskHash &self, nb::args) { self.exit(); })
         .def("close", &PyDiskHash::close)

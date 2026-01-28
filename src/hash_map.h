@@ -93,6 +93,11 @@ public:
 		return container_.find_record(bucket_id, hash, key);
 	}
 
+	bool remove(hash_t hash, const_record const &key) {
+		size_t bucket_id = catalogue_.find(hash);
+		return container_.remove_record(bucket_id, hash, key);
+	}
+
 	size_t bytes_allocated() const {
 		return container_.bytes_allocated() + catalogue_.bytes_allocated();
 	}

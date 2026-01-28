@@ -54,6 +54,12 @@ public:
 		return *(value_type *) hash_map_.get(hash, wrap(key), wrap(value_type()));
 	}
 
+	bool remove(const key_type &key)
+	{
+		hash_t hash = hash_function_(key);
+		return hash_map_.remove(hash, wrap(key));
+	}
+
 	size_t bytes_allocated() const
 	{
 		return hash_map_.bytes_allocated();

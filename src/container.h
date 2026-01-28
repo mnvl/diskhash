@@ -58,6 +58,10 @@ public:
 	// return record(0, 0) if no such record found
 	record find_record(size_t bucket_id, const hash_t &hash, const_record const &key) const;
 
+	// remove record (hash, key) from bucket chain starting at bucket_id
+	// return true if found and removed, false if not found
+	bool remove_record(size_t bucket_id, const hash_t &hash, const_record const &key);
+
 	// find record (hash, key, *) in bucket bucket_id and return pointer to value,
 	// if no such record found -- create new one record (key, 0) in bucket bucket_id
 	// and return pointer to value field, if no space left in bucket -- return 0
