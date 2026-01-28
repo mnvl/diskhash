@@ -21,8 +21,10 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(diskhash PUBLIC rt)
 endif()
 
-# Test executable
+# Test executable using Boost.Test
 enable_testing()
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+
 add_executable(test4
     tests/test4.cpp
     tests/test_catalogue.cpp
@@ -31,7 +33,8 @@ add_executable(test4
     tests/test_hash_map.cpp
     tests/test_vbe.cpp
 )
-target_link_libraries(test4 PRIVATE diskhash)
+target_link_libraries(test4 PRIVATE diskhash Boost::unit_test_framework)
+target_compile_definitions(test4 PRIVATE BOOST_TEST_DYN_LINK)
 add_test(NAME test4 COMMAND test4)
 
 # Python bindings (built via scikit-build-core: pip install .)

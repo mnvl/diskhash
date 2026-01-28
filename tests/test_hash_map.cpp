@@ -1,17 +1,14 @@
 
+#include <boost/test/unit_test.hpp>
 #include <time.h>
 #include <string.h>
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <map>
-#include <iostream>
 
 #include "wrapped_hash_map.h"
 
 using namespace diskhash;
-
 
 struct hash
 {
@@ -28,7 +25,7 @@ struct hash
 	}
 };
 
-std::string random_key()
+static std::string random_key()
 {
 	std::string k;
 
@@ -40,7 +37,9 @@ std::string random_key()
 	return k;
 }
 
-void test_hash_map()
+BOOST_AUTO_TEST_SUITE(hash_map_suite)
+
+BOOST_AUTO_TEST_CASE(validity)
 {
 	wrapped_hash_map<std::string, unsigned, hash> map1("test");
 	std::map<std::string, unsigned> map2;
@@ -56,14 +55,14 @@ void test_hash_map()
 		{
 			for(std::map<std::string, unsigned>::const_iterator it2 = map2.begin(); it2 != map2.end(); it2++)
 			{
-				assert(map1[it2->first] == it2->second);
+				BOOST_CHECK_EQUAL(map1[it2->first], it2->second);
 			}
 		}
 	}
 
 	for(std::map<std::string, unsigned>::const_iterator it2 = map2.begin(); it2 != map2.end(); it2++)
 	{
-		assert(map1[it2->first] == it2->second);
+		BOOST_CHECK_EQUAL(map1[it2->first], it2->second);
 	}
 
 	map1.close();
@@ -72,12 +71,11 @@ void test_hash_map()
 	unlink("testdat");
 }
 
-void test_hash_map_remove()
+BOOST_AUTO_TEST_CASE(remove)
 {
 	wrapped_hash_map<std::string, unsigned, hash> map1("test_rm");
 	std::map<std::string, unsigned> map2;
 
-	std::cout << "inserting records...\n";
 	for(int i = 0; i < 0x4000; i++)
 	{
 		std::string k = random_key();
@@ -86,53 +84,38 @@ void test_hash_map_remove()
 		map2[k] = i;
 	}
 
-	std::cout << "checking remove returns false for non-existent key...\n";
-	assert(!map1.remove("zzzzzzzzz_nonexistent"));
+	BOOST_CHECK(!map1.remove("zzzzzzzzz_nonexistent"));
 
-	std::cout << "removing every other record...\n";
+	std::map<std::string, unsigned> to_remove;
+	bool keep = false;
+	for(std::map<std::string, unsigned>::const_iterator it = map2.begin(); it != map2.end(); it++)
 	{
-		std::map<std::string, unsigned> to_remove;
-		bool keep = false;
-		for(std::map<std::string, unsigned>::const_iterator it = map2.begin(); it != map2.end(); it++)
+		if(!keep)
 		{
-			if(!keep)
-			{
-				to_remove.insert(*it);
-			}
-			keep = !keep;
+			to_remove.insert(*it);
 		}
-
-		for(std::map<std::string, unsigned>::const_iterator it = to_remove.begin(); it != to_remove.end(); it++)
-		{
-			assert(map1.remove(it->first));
-			map2.erase(it->first);
-		}
+		keep = !keep;
 	}
 
-	std::cout << "verifying remaining records...\n";
+	for(std::map<std::string, unsigned>::const_iterator it = to_remove.begin(); it != to_remove.end(); it++)
+	{
+		BOOST_CHECK(map1.remove(it->first));
+		map2.erase(it->first);
+	}
+
 	for(std::map<std::string, unsigned>::const_iterator it = map2.begin(); it != map2.end(); it++)
 	{
-		assert(map1[it->first] == it->second);
+		BOOST_CHECK_EQUAL(map1[it->first], it->second);
 	}
 
-	std::cout << "verifying removed records are gone...\n";
-	// Re-insert a previously removed key to confirm it's truly absent
-	// (operator[] will create a new record with default value 0)
-	{
-		// pick a key we know was removed by checking it's not in map2
-		// but we don't have the removed set here, so just verify double-remove fails
-	}
-
-	std::cout << "removing remaining records...\n";
 	for(std::map<std::string, unsigned>::const_iterator it = map2.begin(); it != map2.end(); it++)
 	{
-		assert(map1.remove(it->first));
+		BOOST_CHECK(map1.remove(it->first));
 	}
 
-	std::cout << "verifying all records removed (double-remove fails)...\n";
 	for(std::map<std::string, unsigned>::const_iterator it = map2.begin(); it != map2.end(); it++)
 	{
-		assert(!map1.remove(it->first));
+		BOOST_CHECK(!map1.remove(it->first));
 	}
 
 	map1.close();
@@ -141,63 +124,62 @@ void test_hash_map_remove()
 	unlink("test_rmdat");
 }
 
-void test_hash_map_iterate()
+BOOST_AUTO_TEST_CASE(iterate_empty)
 {
-	// test empty map iteration
-	{
-		wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
-		auto it = map1.begin();
-		auto end = map1.end();
-		assert(it == end);
-		map1.close();
-		unlink("test_itercat");
-		unlink("test_iterdat");
-	}
-
-	// test iteration with records
-	{
-		wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
-		std::map<std::string, unsigned> map2;
-
-		srand(42);
-
-		for(int i = 0; i < 0x1000; i++)
-		{
-			std::string k = random_key();
-			map1[k] = i;
-			map2[k] = i;
-		}
-
-		// iterate and collect all (key, value) pairs
-		std::map<std::string, unsigned> collected;
-		for(auto it = map1.begin(); it != map1.end(); ++it)
-		{
-			auto [key, value] = *it;
-			std::string k(key.data(), key.size());
-			unsigned v;
-			assert(value.size() == sizeof(unsigned));
-			std::copy(value.data(), value.data() + sizeof(unsigned),
-				reinterpret_cast<char *>(&v));
-			collected[k] = v;
-		}
-
-		assert(collected.size() == map2.size());
-		for(auto const &[k, v] : map2)
-		{
-			auto it = collected.find(k);
-			assert(it != collected.end());
-			assert(it->second == v);
-		}
-
-		std::cout << "iteration test: " << collected.size() << " records verified\n";
-
-		map1.close();
-		unlink("test_itercat");
-		unlink("test_iterdat");
-	}
+	wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
+	auto it = map1.begin();
+	auto end = map1.end();
+	BOOST_CHECK(it == end);
+	map1.close();
+	unlink("test_itercat");
+	unlink("test_iterdat");
 }
 
-void test_hash_map_perf_inner(size_t records_count)
+BOOST_AUTO_TEST_CASE(iterate)
+{
+	wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
+	std::map<std::string, unsigned> map2;
+
+	srand(42);
+
+	for(int i = 0; i < 0x1000; i++)
+	{
+		std::string k = random_key();
+		map1[k] = i;
+		map2[k] = i;
+	}
+
+	std::map<std::string, unsigned> collected;
+	for(auto it = map1.begin(); it != map1.end(); ++it)
+	{
+		auto [key, value] = *it;
+		std::string k(key.data(), key.size());
+		unsigned v;
+		BOOST_REQUIRE_EQUAL(value.size(), sizeof(unsigned));
+		std::copy(value.data(), value.data() + sizeof(unsigned),
+			reinterpret_cast<char *>(&v));
+		collected[k] = v;
+	}
+
+	BOOST_CHECK_EQUAL(collected.size(), map2.size());
+	for(auto const &[k, v] : map2)
+	{
+		auto it = collected.find(k);
+		BOOST_REQUIRE(it != collected.end());
+		BOOST_CHECK_EQUAL(it->second, v);
+	}
+
+	map1.close();
+	unlink("test_itercat");
+	unlink("test_iterdat");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Performance test in separate suite, disabled by default
+BOOST_AUTO_TEST_SUITE(hash_map_perf, * boost::unit_test::disabled())
+
+static void perf_inner(size_t records_count)
 {
 	size_t data_size = 0;
 
@@ -269,12 +251,14 @@ void test_hash_map_perf_inner(size_t records_count)
 		records_count, data_size, bytes_allocated, double(bytes_allocated) / data_size);
 }
 
-void test_hash_map_perf()
+BOOST_AUTO_TEST_CASE(performance)
 {
 	srand(time(0));
 
 	for(size_t n = 4096; n <= 4 * 1024*1024; n <<= 1)
 	{
-		test_hash_map_perf_inner(n);
+		perf_inner(n);
 	}
 }
+
+BOOST_AUTO_TEST_SUITE_END()

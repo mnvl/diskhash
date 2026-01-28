@@ -1,33 +1,33 @@
 
-#include <assert.h>
-#include <iostream>
+#include <boost/test/unit_test.hpp>
 
 #include "file_map.h"
 
 using namespace diskhash;
 
-void test_file_map()
+BOOST_AUTO_TEST_SUITE(file_map_suite, * boost::unit_test::disabled())
+
+BOOST_AUTO_TEST_CASE(basic_operations)
 {
 	static const size_t N = 4096;
 
-	std::cout << "creating test_map file..." << std::endl;
 	file_map fm("test_map", false, N * sizeof(long));
 
 	long *start = (long *) fm.start();
-	std::cout << "mapped buffer start is " << start << std::endl;
+	BOOST_REQUIRE(start != nullptr);
 
-	std::cout << "writing to map..." << std::endl;
 	for(size_t i = 0; i < N; i++)
 	{
 		start[i] = i;
 	}
 
-	std::cout << "reading from map..." << std::endl;
 	for(size_t i = 0; i < N; i++)
 	{
-		assert(start[i] == i);
+		BOOST_CHECK_EQUAL(start[i], static_cast<long>(i));
 	}
 
 	fm.close();
 	unlink("test_map");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
