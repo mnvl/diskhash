@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <optional>
 #include <stdexcept>
 #include "file_map.h"
-#include "record.h"
 
 namespace diskhash {
 

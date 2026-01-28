@@ -4,10 +4,17 @@
 #include <assert.h>
 #include <map>
 #include <iostream>
+#include <string_view>
 
 #include "container.h"
 
 using namespace diskhash;
+
+template<class T>
+static std::string_view as_view(T const &t)
+{
+	return std::string_view(reinterpret_cast<const char *>(&t), sizeof(T));
+}
 
 void test_container()
 {
@@ -34,7 +41,7 @@ void test_container()
 			continue;
 		}
 
-		container.get(bucket_id, ~key, diskhash::wrap(key), diskhash::wrap(value));
+		container.get(bucket_id, ~key, as_view(key), as_view(value));
 
 		map.insert(std::make_pair(key, value));
 	}
@@ -42,7 +49,7 @@ void test_container()
 	std::cout << "checking correctness of find()...\n";
 	for(map_type::const_iterator it = map.begin(); it != map.end(); it++)
 	{
-		assert(*(unsigned *) container.find(bucket_id, ~it->first, diskhash::wrap(it->first)) == it->second);
+		assert(*(unsigned *) container.find(bucket_id, ~it->first, as_view(it->first)) == it->second);
 	}
 
 	std::cout << "splitting bucket " << bucket_id << "...\n";
@@ -55,11 +62,11 @@ void test_container()
 
 		if(hash & (1u << (sizeof(unsigned) * CHAR_BIT - 1)))
 		{
-			assert(*(unsigned *) container.find(new_bucket_id, hash, diskhash::wrap(it->first)) == it->second);
+			assert(*(unsigned *) container.find(new_bucket_id, hash, as_view(it->first)) == it->second);
 		}
 		else
 		{
-			assert(*(unsigned *) container.find(bucket_id, hash, diskhash::wrap(it->first)) == it->second);
+			assert(*(unsigned *) container.find(bucket_id, hash, as_view(it->first)) == it->second);
 		}
 	}
 
@@ -91,14 +98,14 @@ void test_container_remove()
 			continue;
 		}
 
-		container.get(bucket_id, ~key, diskhash::wrap(key), diskhash::wrap(value));
+		container.get(bucket_id, ~key, as_view(key), as_view(value));
 		map.insert(std::make_pair(key, value));
 	}
 
 	std::cout << "checking remove_record returns false for non-existent key...\n";
 	{
 		unsigned missing_key = 0xdeadbeef;
-		assert(!container.remove_record(bucket_id, ~missing_key, diskhash::wrap(missing_key)));
+		assert(!container.remove_record(bucket_id, ~missing_key, as_view(missing_key)));
 	}
 
 	std::cout << "removing records one by one and verifying...\n";
@@ -109,18 +116,18 @@ void test_container_remove()
 		unsigned hash = ~key;
 
 		// remove from container
-		assert(container.remove_record(bucket_id, hash, diskhash::wrap(key)));
+		assert(container.remove_record(bucket_id, hash, as_view(key)));
 		removed++;
 
 		// removing again should return false
-		assert(!container.remove_record(bucket_id, hash, diskhash::wrap(key)));
+		assert(!container.remove_record(bucket_id, hash, as_view(key)));
 
 		it = map.erase(it);
 
 		// remaining records should still be findable
 		for(map_type::const_iterator it2 = map.begin(); it2 != map.end(); it2++)
 		{
-			assert(*(unsigned *) container.find(bucket_id, ~it2->first, diskhash::wrap(it2->first)) == it2->second);
+			assert(*(unsigned *) container.find(bucket_id, ~it2->first, as_view(it2->first)) == it2->second);
 		}
 	}
 

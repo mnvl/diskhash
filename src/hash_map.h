@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <optional>
 #include <string_view>
-#include "record.h"
 #include "container.h"
 #include "catalogue.h"
 
