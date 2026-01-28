@@ -5,9 +5,23 @@
 
 using namespace diskhash;
 
+namespace {
+
+void cleanup_files(const char *base)
+{
+	unlink(base);
+}
+
+struct basic_fixture {
+	basic_fixture() { cleanup_files("test_map"); }
+	~basic_fixture() { cleanup_files("test_map"); }
+};
+
+}
+
 BOOST_AUTO_TEST_SUITE(file_map_suite, * boost::unit_test::disabled())
 
-BOOST_AUTO_TEST_CASE(basic_operations)
+BOOST_FIXTURE_TEST_CASE(basic_operations, basic_fixture)
 {
 	static const size_t N = 4096;
 
@@ -27,7 +41,6 @@ BOOST_AUTO_TEST_CASE(basic_operations)
 	}
 
 	fm.close();
-	unlink("test_map");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -10,6 +10,36 @@
 
 using namespace diskhash;
 
+namespace {
+
+void cleanup_hash_map_files(const char *base)
+{
+	std::string cat = std::string(base) + "cat";
+	std::string dat = std::string(base) + "dat";
+	unlink(cat.c_str());
+	unlink(dat.c_str());
+}
+
+struct validity_fixture {
+	validity_fixture() { cleanup_hash_map_files("test"); }
+	~validity_fixture() { cleanup_hash_map_files("test"); }
+};
+
+struct remove_fixture {
+	remove_fixture() { cleanup_hash_map_files("test_rm"); }
+	~remove_fixture() { cleanup_hash_map_files("test_rm"); }
+};
+
+struct iterate_fixture {
+	iterate_fixture() { cleanup_hash_map_files("test_iter"); }
+	~iterate_fixture() { cleanup_hash_map_files("test_iter"); }
+};
+
+struct perf_fixture {
+	perf_fixture() { cleanup_hash_map_files("test"); }
+	~perf_fixture() { cleanup_hash_map_files("test"); }
+};
+
 struct hash
 {
 	unsigned operator ()(const std::string &k)
@@ -25,7 +55,7 @@ struct hash
 	}
 };
 
-static std::string random_key()
+std::string random_key()
 {
 	std::string k;
 
@@ -37,9 +67,11 @@ static std::string random_key()
 	return k;
 }
 
+}
+
 BOOST_AUTO_TEST_SUITE(hash_map_suite)
 
-BOOST_AUTO_TEST_CASE(validity)
+BOOST_FIXTURE_TEST_CASE(validity, validity_fixture)
 {
 	wrapped_hash_map<std::string, unsigned, hash> map1("test");
 	std::map<std::string, unsigned> map2;
@@ -66,12 +98,9 @@ BOOST_AUTO_TEST_CASE(validity)
 	}
 
 	map1.close();
-
-	unlink("testcat");
-	unlink("testdat");
 }
 
-BOOST_AUTO_TEST_CASE(remove)
+BOOST_FIXTURE_TEST_CASE(remove, remove_fixture)
 {
 	wrapped_hash_map<std::string, unsigned, hash> map1("test_rm");
 	std::map<std::string, unsigned> map2;
@@ -119,23 +148,18 @@ BOOST_AUTO_TEST_CASE(remove)
 	}
 
 	map1.close();
-
-	unlink("test_rmcat");
-	unlink("test_rmdat");
 }
 
-BOOST_AUTO_TEST_CASE(iterate_empty)
+BOOST_FIXTURE_TEST_CASE(iterate_empty, iterate_fixture)
 {
 	wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
 	auto it = map1.begin();
 	auto end = map1.end();
 	BOOST_CHECK(it == end);
 	map1.close();
-	unlink("test_itercat");
-	unlink("test_iterdat");
 }
 
-BOOST_AUTO_TEST_CASE(iterate)
+BOOST_FIXTURE_TEST_CASE(iterate, iterate_fixture)
 {
 	wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
 	std::map<std::string, unsigned> map2;
@@ -170,8 +194,6 @@ BOOST_AUTO_TEST_CASE(iterate)
 	}
 
 	map1.close();
-	unlink("test_itercat");
-	unlink("test_iterdat");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -179,7 +201,9 @@ BOOST_AUTO_TEST_SUITE_END()
 // Performance test in separate suite, disabled by default
 BOOST_AUTO_TEST_SUITE(hash_map_perf, * boost::unit_test::disabled())
 
-static void perf_inner(size_t records_count)
+namespace {
+
+void perf_inner(size_t records_count)
 {
 	size_t data_size = 0;
 
@@ -206,10 +230,10 @@ static void perf_inner(size_t records_count)
 		}
 
 		bytes_allocated = map1.bytes_allocated() - records_count * sizeof(size_t);
+		map1.close();
 	}
 
-	unlink("testcat");
-	unlink("testdat");
+	cleanup_hash_map_files("test");
 
 	#if defined(WIN32)
 	LARGE_INTEGER c2;
@@ -251,7 +275,9 @@ static void perf_inner(size_t records_count)
 		records_count, data_size, bytes_allocated, double(bytes_allocated) / data_size);
 }
 
-BOOST_AUTO_TEST_CASE(performance)
+}
+
+BOOST_FIXTURE_TEST_CASE(performance, perf_fixture)
 {
 	srand(time(0));
 

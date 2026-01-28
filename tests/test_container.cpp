@@ -10,9 +10,28 @@
 
 using namespace diskhash;
 
+namespace {
+
+void cleanup_files(const char *base)
+{
+	unlink(base);
+}
+
+struct basic_operations_fixture {
+	basic_operations_fixture() { cleanup_files("test_map"); }
+	~basic_operations_fixture() { cleanup_files("test_map"); }
+};
+
+struct remove_operations_fixture {
+	remove_operations_fixture() { cleanup_files("test_map_rm"); }
+	~remove_operations_fixture() { cleanup_files("test_map_rm"); }
+};
+
+}
+
 BOOST_AUTO_TEST_SUITE(container_suite)
 
-BOOST_AUTO_TEST_CASE(basic_operations)
+BOOST_FIXTURE_TEST_CASE(basic_operations, basic_operations_fixture)
 {
 	typedef container<> container_type;
 	typedef std::map<unsigned, unsigned> map_type;
@@ -59,10 +78,9 @@ BOOST_AUTO_TEST_CASE(basic_operations)
 	}
 
 	cont.close();
-	unlink("test_map");
 }
 
-BOOST_AUTO_TEST_CASE(remove_operations)
+BOOST_FIXTURE_TEST_CASE(remove_operations, remove_operations_fixture)
 {
 	typedef container<> container_type;
 	typedef std::map<unsigned, unsigned> map_type;
@@ -107,7 +125,6 @@ BOOST_AUTO_TEST_CASE(remove_operations)
 	}
 
 	cont.close();
-	unlink("test_map_rm");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -7,7 +7,19 @@
 
 using namespace diskhash;
 
-static void fill_catalogue(catalogue &cat)
+namespace {
+
+void cleanup_files(const char *base)
+{
+	unlink(base);
+}
+
+struct split_fixture {
+	split_fixture() { cleanup_files("test_map"); }
+	~split_fixture() { cleanup_files("test_map"); }
+};
+
+void fill_catalogue(catalogue &cat)
 {
 	int n = 1000 + rand() % 1000;
 
@@ -17,9 +29,11 @@ static void fill_catalogue(catalogue &cat)
 	}
 }
 
+}
+
 BOOST_AUTO_TEST_SUITE(catalogue_suite, * boost::unit_test::disabled())
 
-BOOST_AUTO_TEST_CASE(split_operation)
+BOOST_FIXTURE_TEST_CASE(split_operation, split_fixture)
 {
 	catalogue cat("test_map", 16);
 
@@ -40,7 +54,6 @@ BOOST_AUTO_TEST_CASE(split_operation)
 	}
 
 	cat.close();
-	unlink("test_map");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
