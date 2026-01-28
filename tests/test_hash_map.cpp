@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <map>
+#include <vector>
 
 #include "wrapped_hash_map.h"
 
@@ -192,6 +193,118 @@ BOOST_FIXTURE_TEST_CASE(iterate, iterate_fixture)
 		BOOST_REQUIRE(it != collected.end());
 		BOOST_CHECK_EQUAL(it->second, v);
 	}
+
+	map1.close();
+}
+
+BOOST_FIXTURE_TEST_CASE(iterate_with_insert, iterate_fixture)
+{
+	wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
+
+	srand(123);
+
+	// insert initial records
+	for(int i = 0; i < 100; i++)
+	{
+		map1[random_key()] = i;
+	}
+
+	// iterate while inserting new records
+	// the iterator may skip or repeat records, but must not crash
+	size_t iterations = 0;
+	const size_t max_iterations = 10000; // safety limit
+	for(auto it = map1.begin(); it != map1.end() && iterations < max_iterations; ++it)
+	{
+		iterations++;
+		// insert a new record every 10 iterations
+		if(iterations % 10 == 0)
+		{
+			map1[random_key()] = static_cast<unsigned>(iterations);
+		}
+	}
+
+	BOOST_CHECK(iterations < max_iterations); // should terminate
+	BOOST_CHECK(iterations >= 100); // should see at least initial records
+
+	map1.close();
+}
+
+BOOST_FIXTURE_TEST_CASE(iterate_with_remove, iterate_fixture)
+{
+	wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
+	std::vector<std::string> keys;
+
+	srand(456);
+
+	// insert records and remember keys
+	for(int i = 0; i < 200; i++)
+	{
+		std::string k = random_key();
+		map1[k] = i;
+		keys.push_back(k);
+	}
+
+	// iterate while removing records
+	// the iterator may skip or repeat records, but must not crash
+	size_t iterations = 0;
+	size_t removals = 0;
+	const size_t max_iterations = 10000; // safety limit
+	for(auto it = map1.begin(); it != map1.end() && iterations < max_iterations; ++it)
+	{
+		iterations++;
+		// remove a record every 5 iterations
+		if(iterations % 5 == 0 && removals < keys.size())
+		{
+			map1.remove(keys[removals]);
+			removals++;
+		}
+	}
+
+	BOOST_CHECK(iterations < max_iterations); // should terminate
+
+	map1.close();
+}
+
+BOOST_FIXTURE_TEST_CASE(iterate_with_mixed_mutations, iterate_fixture)
+{
+	wrapped_hash_map<std::string, unsigned, hash> map1("test_iter");
+	std::vector<std::string> keys;
+
+	srand(789);
+
+	// insert initial records
+	for(int i = 0; i < 500; i++)
+	{
+		std::string k = random_key();
+		map1[k] = i;
+		keys.push_back(k);
+	}
+
+	// iterate while both inserting and removing
+	size_t iterations = 0;
+	size_t removals = 0;
+	const size_t max_iterations = 20000; // safety limit
+	for(auto it = map1.begin(); it != map1.end() && iterations < max_iterations; ++it)
+	{
+		iterations++;
+
+		// insert new records
+		if(iterations % 7 == 0)
+		{
+			std::string k = random_key();
+			map1[k] = static_cast<unsigned>(iterations);
+			keys.push_back(k);
+		}
+
+		// remove existing records
+		if(iterations % 11 == 0 && removals < keys.size() / 2)
+		{
+			map1.remove(keys[removals]);
+			removals++;
+		}
+	}
+
+	BOOST_CHECK(iterations < max_iterations); // should terminate
 
 	map1.close();
 }
