@@ -100,8 +100,8 @@ public:
 	}
 
 private:
-	// shared helper returning pointer to value data in mmap memory, or nullptr if not found
-	unsigned char *find_value_ptr(size_t bucket_id, const hash_t &hash, std::string_view key, size_t &value_length) const;
+	// search bucket chain for record matching (hash, key) and return its value, or nullopt
+	std::optional<std::string_view> find_value(size_t bucket_id, const hash_t &hash, std::string_view key) const;
 
 	static const size_t INVALID_BUCKET_ID = size_t(-1);
 	static const unsigned SIGNATURE = 0x69d3db7a;

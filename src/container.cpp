@@ -93,7 +93,7 @@ std::string_view diskhash::container<BucketSize>::create_record(size_t bucket_id
 }
 
 template<size_t BucketSize>
-unsigned char *diskhash::container<BucketSize>::find_value_ptr(size_t bucket_id, const hash_t &hash, std::string_view key, size_t &value_length) const
+std::optional<std::string_view> diskhash::container<BucketSize>::find_value(size_t bucket_id, const hash_t &hash, std::string_view key) const
 {
 	const unsigned char *key_bytes = reinterpret_cast<const unsigned char *>(key.data());
 
@@ -106,7 +106,7 @@ unsigned char *diskhash::container<BucketSize>::find_value_ptr(size_t bucket_id,
 		while(cursor != bucket_ptr->data + bucket_ptr->bytes_used)
 		{
 			hash_t record_hash;
-			size_t key_length;
+			size_t key_length, value_length;
 
 			std::copy(cursor, cursor + sizeof(hash_t), (unsigned char *) &record_hash);
 			cursor = vbe::read(cursor + sizeof(hash_t), key_length);
@@ -114,7 +114,7 @@ unsigned char *diskhash::container<BucketSize>::find_value_ptr(size_t bucket_id,
 
 			if(record_hash == hash && key.size() == key_length && std::equal(cursor, cursor + key_length, key_bytes))
 			{
-				return cursor + key_length;
+				return std::string_view(reinterpret_cast<const char *>(cursor + key_length), value_length);
 			}
 
 			cursor += key_length;
@@ -126,17 +126,13 @@ unsigned char *diskhash::container<BucketSize>::find_value_ptr(size_t bucket_id,
 		bucket_id = bucket_ptr->next_bucket_id;
 	}
 
-	return nullptr;
+	return std::nullopt;
 }
 
 template<size_t BucketSize>
 std::optional<std::string_view> diskhash::container<BucketSize>::find_record(size_t bucket_id, const hash_t &hash, std::string_view key) const
 {
-	size_t value_length;
-	unsigned char *ptr = find_value_ptr(bucket_id, hash, key, value_length);
-	if(!ptr)
-		return std::nullopt;
-	return std::string_view(reinterpret_cast<const char *>(ptr), value_length);
+	return find_value(bucket_id, hash, key);
 }
 
 template<size_t BucketSize>
