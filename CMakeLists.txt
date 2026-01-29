@@ -20,7 +20,7 @@ add_library(diskhash
 )
 target_include_directories(diskhash PUBLIC src)
 set_target_properties(diskhash PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_compile_features(diskhash PUBLIC cxx_std_17)
+target_compile_features(diskhash PUBLIC cxx_std_20)
 
 # Link -lrt on Linux (used by tests for clock_gettime)
 if(UNIX AND NOT APPLE)
@@ -63,7 +63,7 @@ else()
     target_link_libraries(diskhash_server PRIVATE pthread)
 endif()
 target_include_directories(diskhash_server PRIVATE src)
-target_compile_features(diskhash_server PRIVATE cxx_std_17)
+target_compile_features(diskhash_server PRIVATE cxx_std_20)
 
 # Python bindings (built via scikit-build-core: pip install .)
 if(SKBUILD)

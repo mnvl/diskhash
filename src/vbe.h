@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <limits.h>
 
 namespace diskhash {
@@ -42,20 +43,13 @@ unsigned char *read(unsigned char *ptr, T &val)
 	return ptr;
 }
 
-// TODO: optimize, length(x) = (msb(x) / MARK_OFFSET) + 1
 template<class T>
 size_t length(T const &val)
 {
-	T val_copy = val;
-	size_t result = 1;
+	if(val == 0)
+		return 1;
 
-	while(val_copy > DATA_MASK)
-	{
-		result++;
-		val_copy >>= MARK_OFFSET;
-	}
-
-	return result;
+	return (std::bit_width(static_cast<std::make_unsigned_t<T>>(val)) - 1) / MARK_OFFSET + 1;
 }
 
 // namespace vbe

@@ -47,4 +47,29 @@ BOOST_AUTO_TEST_CASE(random_values)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(length_boundaries)
+{
+	// Values at exact boundaries of each VBE byte count
+	BOOST_CHECK_EQUAL(length(0u), 1u);
+	BOOST_CHECK_EQUAL(length(1u), 1u);
+	BOOST_CHECK_EQUAL(length(127u), 1u);
+	BOOST_CHECK_EQUAL(length(128u), 2u);
+	BOOST_CHECK_EQUAL(length(128u*128u - 1u), 2u);
+	BOOST_CHECK_EQUAL(length(128u*128u), 3u);
+	BOOST_CHECK_EQUAL(length(128u*128u*128u - 1u), 3u);
+	BOOST_CHECK_EQUAL(length(128u*128u*128u), 4u);
+	BOOST_CHECK_EQUAL(length(128u*128u*128u*128u - 1u), 4u);
+	BOOST_CHECK_EQUAL(length(128u*128u*128u*128u), 5u);
+	BOOST_CHECK_EQUAL(length(~0u), 5u);
+}
+
+BOOST_AUTO_TEST_CASE(length_matches_write)
+{
+	for(unsigned i = 0, n = 0; i < 1000*1000; i++)
+	{
+		BOOST_CHECK_EQUAL(length(n), bytes_per_number(n));
+		n += rand();
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
