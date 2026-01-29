@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include "hash_map.h"
 
 namespace diskhash {
@@ -19,6 +20,7 @@ static std::string_view wrap(T const &t)
 
 template<class Key, class Value, class HashFunc, size_t BucketSize = DEFAULT_BUCKET_SIZE>
 class wrapped_hash_map {
+	static_assert(std::is_trivial_v<Value>, "Value must be a trivial type");
 public:
 	typedef Key key_type;
 	typedef Value value_type;
@@ -33,7 +35,8 @@ public:
 	value_type &operator[](const key_type &key)
 	{
 		hash_t hash = hash_function_(key);
-		return *(value_type *) hash_map_.get(hash, wrap(key), wrap(value_type()));
+		auto result = hash_map_.get(hash, wrap(key), wrap(value_type()));
+		return *(value_type *)(const_cast<char*>(result->data()));
 	}
 
 	bool remove(const key_type &key)
