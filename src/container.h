@@ -29,10 +29,6 @@ public:
 	void *create_record(size_t bucket_id, hash_t const &hash, std::string_view key,
 		std::string_view value);
 
-	// find record (hash, key, *) in bucket bucket_id and return pointer to value,
-	// return 0 if no such record found
-	void *find(size_t bucket_id, const hash_t &hash, std::string_view key) const;
-
 	// find record (hash, key, *) in bucket bucket_id and return value as string_view,
 	// return nullopt if no such record found
 	std::optional<std::string_view> find_record(size_t bucket_id, const hash_t &hash, std::string_view key) const;
@@ -58,9 +54,9 @@ public:
 	// and return pointer to value field, if no space left in bucket -- return 0
 	void *get(size_t bucket_id, const hash_t &hash, std::string_view key, std::string_view value)
 	{
-		if(void *value = find(bucket_id, hash, key))
+		if(auto result = find_record(bucket_id, hash, key))
 		{
-			return value;
+			return const_cast<char*>(result->data());
 		}
 
 		return create_record(bucket_id, hash, key, value);

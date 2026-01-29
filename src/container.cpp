@@ -130,13 +130,6 @@ unsigned char *diskhash::container<BucketSize>::find_value_ptr(size_t bucket_id,
 }
 
 template<size_t BucketSize>
-void *diskhash::container<BucketSize>::find(size_t bucket_id, const hash_t &hash, std::string_view key) const
-{
-	size_t value_length;
-	return find_value_ptr(bucket_id, hash, key, value_length);
-}
-
-template<size_t BucketSize>
 std::optional<std::string_view> diskhash::container<BucketSize>::find_record(size_t bucket_id, const hash_t &hash, std::string_view key) const
 {
 	size_t value_length;

@@ -21,13 +21,13 @@ public:
 		}
 	}
 
-	void *get(hash_t hash, std::string_view key, std::string_view default_value)
+	std::optional<std::string_view> get(hash_t hash, std::string_view key, std::string_view default_value)
 	{
 		size_t bucket_id = catalogue_.find(hash);
 
-		if(void *result_ptr = container_.find(bucket_id, hash, key))
+		if(auto result = container_.find_record(bucket_id, hash, key))
 		{
-			return result_ptr;
+			return result;
 		}
 
 		if(container_.bucket_to_split(bucket_id))
@@ -58,7 +58,8 @@ public:
 			}
 		}
 
-		return container_.create_record(bucket_id, hash, key, default_value);
+		void *ptr = container_.create_record(bucket_id, hash, key, default_value);
+		return std::string_view(reinterpret_cast<const char *>(ptr), default_value.size());
 	}
 
 	std::optional<std::string_view> find(hash_t hash, std::string_view key) const {

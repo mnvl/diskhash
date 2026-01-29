@@ -58,7 +58,8 @@ BOOST_FIXTURE_TEST_CASE(basic_operations, basic_operations_fixture)
 
 	for(map_type::const_iterator it = map.begin(); it != map.end(); it++)
 	{
-		BOOST_CHECK_EQUAL(*(unsigned *) cont.find(bucket_id, ~it->first, wrap(it->first)), it->second);
+		auto r = cont.find_record(bucket_id, ~it->first, wrap(it->first));
+		BOOST_CHECK_EQUAL(*(const unsigned *) r->data(), it->second);
 	}
 
 	size_t new_bucket_id = cont.split(bucket_id);
@@ -69,11 +70,13 @@ BOOST_FIXTURE_TEST_CASE(basic_operations, basic_operations_fixture)
 
 		if(hash & (1u << (sizeof(unsigned) * CHAR_BIT - 1)))
 		{
-			BOOST_CHECK_EQUAL(*(unsigned *) cont.find(new_bucket_id, hash, wrap(it->first)), it->second);
+			auto r = cont.find_record(new_bucket_id, hash, wrap(it->first));
+			BOOST_CHECK_EQUAL(*(const unsigned *) r->data(), it->second);
 		}
 		else
 		{
-			BOOST_CHECK_EQUAL(*(unsigned *) cont.find(bucket_id, hash, wrap(it->first)), it->second);
+			auto r = cont.find_record(bucket_id, hash, wrap(it->first));
+			BOOST_CHECK_EQUAL(*(const unsigned *) r->data(), it->second);
 		}
 	}
 
@@ -120,7 +123,8 @@ BOOST_FIXTURE_TEST_CASE(remove_operations, remove_operations_fixture)
 
 		for(map_type::const_iterator it2 = map.begin(); it2 != map.end(); it2++)
 		{
-			BOOST_CHECK_EQUAL(*(unsigned *) cont.find(bucket_id, ~it2->first, wrap(it2->first)), it2->second);
+			auto r = cont.find_record(bucket_id, ~it2->first, wrap(it2->first));
+			BOOST_CHECK_EQUAL(*(const unsigned *) r->data(), it2->second);
 		}
 	}
 
