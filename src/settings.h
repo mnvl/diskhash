@@ -13,7 +13,8 @@ namespace diskhash {
 typedef unsigned hash_t;
 size_t const HASH_BITS = sizeof(hash_t) * CHAR_BIT;
 
-size_t const DEFAULT_BUCKET_SIZE = 4096;
+// make bucket size a multiple of standard page sizes for SSDs minus space for 3 size_t metadata fields
+size_t const DEFAULT_BUCKET_SIZE = 4096 - 3 * sizeof(size_t);
 
 // namespace diskhash
 }
