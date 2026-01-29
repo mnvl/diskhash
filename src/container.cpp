@@ -51,7 +51,7 @@ size_t diskhash::container<BucketSize>::create_bucket(size_t prefix_bits)
 }
 
 template<size_t BucketSize>
-void *diskhash::container<BucketSize>::create_record(size_t bucket_id, hash_t const &hash, std::string_view key,
+std::string_view diskhash::container<BucketSize>::create_record(size_t bucket_id, hash_t const &hash, std::string_view key,
 	std::string_view value)
 {
 	bucket_t *bucket_ptr = &layout_->buckets[bucket_id];
@@ -89,7 +89,7 @@ void *diskhash::container<BucketSize>::create_record(size_t bucket_id, hash_t co
 
 	bucket_ptr->bytes_used += bytes_required;
 
-	return cursor;
+	return std::string_view(reinterpret_cast<const char *>(cursor), value.size());
 }
 
 template<size_t BucketSize>

@@ -25,8 +25,8 @@ public:
 	// create bucket and return bucket id
 	size_t create_bucket(size_t prefix_bits);
 
-	// write record (hash, key, *) into bucket bucket_id, return value is pointer to value field
-	void *create_record(size_t bucket_id, hash_t const &hash, std::string_view key,
+	// write record (hash, key, value) into bucket bucket_id, return stored value
+	std::string_view create_record(size_t bucket_id, hash_t const &hash, std::string_view key,
 		std::string_view value);
 
 	// find record (hash, key, *) in bucket bucket_id and return value as string_view,
@@ -49,14 +49,14 @@ public:
 	// return true if found and removed, false if not found
 	bool remove_record(size_t bucket_id, const hash_t &hash, std::string_view key);
 
-	// find record (hash, key, *) in bucket bucket_id and return pointer to value,
-	// if no such record found -- create new one record (key, 0) in bucket bucket_id
-	// and return pointer to value field, if no space left in bucket -- return 0
-	void *get(size_t bucket_id, const hash_t &hash, std::string_view key, std::string_view value)
+	// find record (hash, key, *) in bucket bucket_id and return its value,
+	// if no such record found -- create new record (key, value) in bucket bucket_id
+	// and return the stored value
+	std::string_view get(size_t bucket_id, const hash_t &hash, std::string_view key, std::string_view value)
 	{
 		if(auto result = find_record(bucket_id, hash, key))
 		{
-			return const_cast<char*>(result->data());
+			return *result;
 		}
 
 		return create_record(bucket_id, hash, key, value);

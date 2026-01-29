@@ -58,8 +58,7 @@ public:
 			}
 		}
 
-		void *ptr = container_.create_record(bucket_id, hash, key, default_value);
-		return std::string_view(reinterpret_cast<const char *>(ptr), default_value.size());
+		return container_.create_record(bucket_id, hash, key, default_value);
 	}
 
 	std::optional<std::string_view> find(hash_t hash, std::string_view key) const {
